@@ -29,6 +29,12 @@ export type DashboardData = {
   readonly dateLabel: string;
   readonly tasks: readonly DashboardTask[];
   readonly activeMeasurement: ActiveMeasurement | null;
+  readonly reflections: readonly {
+    readonly id: string;
+    readonly obstacle: string;
+    readonly nextAction: string;
+    readonly updatedAtLabel: string;
+  }[];
 };
 
 function getDayRange(now: Date, timeZone: string, offsetDays: number) {
@@ -68,7 +74,7 @@ export async function getDashboardData(
   const today = getDayRange(now, user.timeZone, 0);
   const yesterday = getDayRange(now, user.timeZone, 1);
 
-  const [tasks, activeMeasurement] = await Promise.all([
+  const [tasks, activeMeasurement, reflection] = await Promise.all([
     db.habitTask.findMany({
       where: { userId: user.id, archivedAt: null },
       orderBy: { createdAt: "asc" },
@@ -89,6 +95,10 @@ export async function getDashboardData(
       where: { userId: user.id, stoppedAt: null, deletedAt: null },
       orderBy: { startedAt: "desc" },
     }),
+    db.continuityReflection.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   return {
@@ -104,6 +114,16 @@ export async function getDashboardData(
             taskId: activeMeasurement.taskId,
             startedAt: activeMeasurement.startedAt.toISOString(),
           },
+    reflections: reflection.map((item) => ({
+      id: item.id,
+      obstacle: item.obstacle,
+      nextAction: item.nextAction,
+      updatedAtLabel: new Intl.DateTimeFormat("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        timeZone: user.timeZone,
+      }).format(item.updatedAt),
+    })),
     tasks: tasks.map((task) => {
       const todaySeconds = sumCompletedSeconds(
         task.measurementSessions.filter(

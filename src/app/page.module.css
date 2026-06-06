@@ -5,6 +5,21 @@
   padding: 40px 24px 56px;
 }
 
+.dashboardPage {
+  width: min(100%, 1080px);
+}
+
+.dashboardWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 48px;
+}
+
+.dashboardMain {
+  min-width: 0;
+}
+
 .header,
 .timerHeading,
 .sectionHeading,
@@ -250,7 +265,170 @@
 
 .goalSection {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 14px;
+}
+
+.taskEdit {
+  width: 100%;
+  border-top: 1px solid #e3e7e3;
+  padding-top: 12px;
+}
+
+.taskEdit summary {
+  width: fit-content;
+  color: #687069;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.editForm label {
+  display: grid;
+  gap: 7px;
+  color: #687069;
+  font-size: 12px;
+}
+
+.editForm input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #202722;
+}
+
+.editForm button,
+.archiveForm button {
+  width: fit-content;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4c554e;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.archiveTrigger {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #c99c97;
+  border-radius: 4px;
+  background: #fff;
+  color: #823c35;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.archiveForm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #eee4e3;
+}
+
+.archiveForm > p {
+  color: #823c35;
+  font-size: 12px;
+}
+
+.archiveForm button {
+  border-color: #c99c97;
+  color: #823c35;
+}
+
+.archiveForm button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.confirmOverlay {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: none;
+  place-items: center;
+  padding: 20px;
+  background: rgb(24 30 26 / 45%);
+}
+
+.confirmToggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.confirmToggle:checked + .confirmOverlay {
+  display: grid;
+}
+
+.confirmDialog {
+  width: min(100%, 420px);
+  padding: 24px;
+  border: 1px solid #d9ded9;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(24 30 26 / 16%);
+}
+
+.confirmDialog h3 {
+  font-size: 18px;
+}
+
+.confirmDialog p {
+  margin-top: 10px;
+  color: #626963;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.confirmActions button,
+.confirmActions label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4c554e;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.confirmActions .confirmDeleteButton {
+  border-color: #9b4a42;
+  background: #9b4a42;
+  color: #fff;
 }
 
 @media (max-width: 480px) {
@@ -269,6 +447,10 @@
 }
 
 /* 履歴画面用スタイル */
+.historyPage {
+  width: min(100%, 720px);
+}
+
 .headerActions {
   display: flex;
   align-items: center;
@@ -318,6 +500,7 @@
 .streakCard {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   padding: 16px 20px;
   border: 1px solid #e3e7e3;
@@ -325,15 +508,17 @@
   background: #fff;
 }
 
-.streakEmoji {
-  font-size: 28px;
-}
-
 .streakValue {
   font-size: 22px;
   font-weight: 700;
   color: #202722;
   line-height: 1.2;
+}
+
+.streakStatus {
+  color: #47745a;
+  font-size: 11px;
+  font-weight: 650;
 }
 
 .streakLabel {
@@ -353,6 +538,29 @@
   flex-direction: column;
   gap: 24px;
   margin-top: 24px;
+}
+
+.calendarNavigation {
+  display: flex;
+  gap: 8px;
+}
+
+.calendarNavigation a {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #315f48;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.calendarNavigation a:hover {
+  border-color: #315f48;
+  background: #f6f8f6;
 }
 
 .calendarMonth {
@@ -398,13 +606,54 @@
   font-size: 12px;
   color: #4c554e;
   font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+  border-radius: 3px;
 }
 
-.activeDay {
-  background: #e2f0e7;
-  color: #2e5843;
+.activityLevel0 {
+  background: #f0f3f0;
+}
+
+.activityLevel1 {
+  background: #dcebe1;
+  color: #315b45;
+  font-weight: 650;
+}
+
+.activityLevel2 {
+  background: #acd0b8;
+  color: #254c38;
+  font-weight: 650;
+}
+
+.activityLevel3 {
+  background: #659778;
+  color: #fff;
   font-weight: 700;
-  border-radius: 50%;
+}
+
+.activityLevel4 {
+  background: #315f48;
+  color: #fff;
+  font-weight: 700;
+}
+
+.activityLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 14px;
+  color: #727973;
+  font-size: 10px;
+}
+
+.legendCell {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgb(49 95 72 / 10%);
+  border-radius: 2px;
 }
 
 .historyList {
@@ -462,4 +711,170 @@
   font-size: 13px;
   text-align: center;
   padding: 40px 0;
+}
+
+.reflectionSection {
+  position: sticky;
+  top: 32px;
+  padding-left: 28px;
+  border-left: 1px solid #d9ded9;
+}
+
+.reflectionHeading h2 {
+  margin-top: 6px;
+  color: #202722;
+  font-size: 18px;
+  font-weight: 620;
+}
+
+.addReflectionButton {
+  display: grid;
+  height: 40px;
+  margin-top: 18px;
+  place-items: center;
+  border: 1px solid #315f48;
+  border-radius: 4px;
+  color: #315f48;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.reflectionList {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.reflectionItem {
+  display: grid;
+  gap: 5px;
+  padding: 12px 0;
+  border-top: 1px solid #e3e7e3;
+  color: inherit;
+  text-decoration: none;
+}
+
+.reflectionItem span,
+.reflectionEmpty {
+  color: #727973;
+  font-size: 11px;
+}
+
+.reflectionItem strong {
+  overflow: hidden;
+  color: #202722;
+  font-size: 13px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reflectionItem p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #6e746f;
+  font-size: 12px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.reflectionEmpty {
+  padding: 20px 0;
+  line-height: 1.7;
+}
+
+.reflectionEditor {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #cfd6d0;
+}
+
+.reflectionEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reflectionEditorHeader h3 {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.reflectionEditorHeader a {
+  color: #687069;
+  font-size: 20px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.reflectionForm {
+  display: grid;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.reflectionForm label {
+  display: grid;
+  gap: 8px;
+  color: #4c554e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reflectionForm textarea {
+  width: 100%;
+  min-height: 124px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #202722;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.reflectionForm textarea:focus {
+  border-color: #47745a;
+  outline: 2px solid rgb(71 116 90 / 14%);
+  outline-offset: 1px;
+}
+
+.reflectionForm button {
+  height: 40px;
+  border: 1px solid #315f48;
+  border-radius: 4px;
+  background: #315f48;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.reflectionForm button:hover {
+  background: #274f3b;
+}
+
+.saveStatus {
+  margin-top: 10px;
+  color: #315f48;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .dashboardWorkspace {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .reflectionSection {
+    position: static;
+    padding: 28px 0 0;
+    border-top: 1px solid #d9ded9;
+    border-left: 0;
+  }
 }

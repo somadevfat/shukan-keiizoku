@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { formatInTimeZone } from "date-fns-tz";
 import { z } from "zod";
 
@@ -10,6 +11,7 @@ import { ensureLocalUser } from "@/server/local-dashboard";
 const taskNameSchema = z.string().trim().min(1).max(80);
 const idSchema = z.string().min(1);
 const goalMinutesSchema = z.coerce.number().int().min(1).max(1_440);
+const reflectionTextSchema = z.string().trim().max(1_000);
 
 export async function createTask(formData: FormData): Promise<void> {
   const name = taskNameSchema.parse(formData.get("name"));
@@ -17,6 +19,55 @@ export async function createTask(formData: FormData): Promise<void> {
 
   await db.habitTask.create({
     data: { name, userId: user.id },
+  });
+
+  revalidatePath("/");
+}
+
+export async function updateTask(formData: FormData): Promise<void> {
+  const taskId = idSchema.parse(formData.get("taskId"));
+  const name = taskNameSchema.parse(formData.get("name"));
+  const user = await ensureLocalUser();
+
+  const updated = await db.habitTask.updateMany({
+    where: { id: taskId, userId: user.id, archivedAt: null },
+    data: { name },
+  });
+
+  if (updated.count !== 1) {
+    throw new Error("編集対象のタスクが見つかりません。");
+  }
+
+  revalidatePath("/");
+}
+
+export async function archiveTask(formData: FormData): Promise<void> {
+  const taskId = idSchema.parse(formData.get("taskId"));
+  const confirmation = z.literal("archive").parse(formData.get("confirmation"));
+  const user = await ensureLocalUser();
+
+  await db.$transaction(async (transaction) => {
+    const activeMeasurement = await transaction.measurementSession.findFirst({
+      where: {
+        userId: user.id,
+        taskId,
+        stoppedAt: null,
+        deletedAt: null,
+      },
+    });
+
+    if (activeMeasurement !== null) {
+      throw new Error("計測中のタスクは削除できません。");
+    }
+
+    const archived = await transaction.habitTask.updateMany({
+      where: { id: taskId, userId: user.id, archivedAt: null },
+      data: { archivedAt: new Date() },
+    });
+
+    if (archived.count !== 1 || confirmation !== "archive") {
+      throw new Error("削除対象のタスクが見つかりません。");
+    }
   });
 
   revalidatePath("/");
@@ -109,4 +160,35 @@ export async function stopMeasurementFromForm(
   formData: FormData,
 ): Promise<void> {
   await stopMeasurement(idSchema.parse(formData.get("measurementId")));
+}
+
+export async function saveContinuityReflection(
+  formData: FormData,
+): Promise<void> {
+  const reflectionId = z
+    .string()
+    .optional()
+    .parse(formData.get("reflectionId") ?? undefined);
+  const obstacle = reflectionTextSchema.parse(formData.get("obstacle"));
+  const nextAction = reflectionTextSchema.parse(formData.get("nextAction"));
+  const user = await ensureLocalUser();
+
+  if (reflectionId === undefined) {
+    await db.continuityReflection.create({
+      data: { userId: user.id, obstacle, nextAction },
+    });
+  } else {
+    const updated = await db.continuityReflection.updateMany({
+      where: { id: reflectionId, userId: user.id },
+      data: { obstacle, nextAction },
+    });
+
+    if (updated.count !== 1) {
+      throw new Error("編集対象のメモが見つかりません。");
+    }
+  }
+
+  revalidatePath("/history");
+  revalidatePath("/");
+  redirect("/?memoStatus=saved");
 }
