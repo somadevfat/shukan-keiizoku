@@ -24,6 +24,7 @@ export type ActiveMeasurement = {
 };
 
 export type DashboardData = {
+  readonly isGuest: boolean;
   readonly currentUserName: string;
   readonly dateLabel: string;
   readonly tasks: readonly DashboardTask[];
@@ -89,6 +90,7 @@ export async function getDashboardData(
   ]);
 
   return {
+    isGuest: user.email.endsWith("@guest.invalid"),
     currentUserName: user.name ?? user.email,
     dateLabel: new Intl.DateTimeFormat("ja-JP", {
       dateStyle: "long",

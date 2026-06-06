@@ -30,6 +30,6 @@ export default defineConfig({
     command:
       "AUTH_BYPASS_LOCAL_USER=true AUTH_BYPASS_REQUIRE_HEADER=true AUTH_SECRET=e2e-test-secret NEXTAUTH_URL=http://127.0.0.1:3000 npm run dev",
     reuseExistingServer: !process.env.CI,
-    url: "http://127.0.0.1:3000",
+    url: "http://127.0.0.1:3000/signin",
   },
 });

@@ -50,7 +50,10 @@ export default async function Home({ searchParams }: HomeProps) {
           <Link href="/history" className={styles.historyLink}>
             履歴
           </Link>
-          <AuthControls userName={dashboard.currentUserName} />
+          <AuthControls
+            isGuest={dashboard.isGuest}
+            userName={dashboard.currentUserName}
+          />
         </div>
       </header>
 

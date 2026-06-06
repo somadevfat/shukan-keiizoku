@@ -1,11 +1,12 @@
 import "server-only";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/server/auth";
 import { db } from "@/server/db";
+import { findGuestUser, GUEST_COOKIE_NAME } from "@/server/guest-identity";
 
 const LOCAL_USER_EMAIL = "local@example.invalid";
 const DEFAULT_TIME_ZONE = "Asia/Tokyo";
@@ -37,9 +38,17 @@ export async function requireCurrentUser() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
 
-  if (email === null || email === undefined) {
-    redirect("/signin");
+  if (email !== null && email !== undefined) {
+    return db.user.findUniqueOrThrow({ where: { email } });
   }
 
-  return db.user.findUniqueOrThrow({ where: { email } });
+  const guestToken = (await cookies()).get(GUEST_COOKIE_NAME)?.value;
+  const guestUser =
+    guestToken === undefined ? null : await findGuestUser(guestToken);
+
+  if (guestUser !== null) {
+    return guestUser;
+  }
+
+  redirect("/api/guest/start");
 }

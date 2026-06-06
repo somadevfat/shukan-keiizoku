@@ -8,7 +8,7 @@ export default function SignInPage() {
         <p className={styles.label}>習慣化カウンター</p>
         <h1>今日の積み上げを始める</h1>
         <p>
-          Googleアカウントでログインすると、自分のタスクと継続履歴を安全に管理できます。
+          Googleアカウントでログインすると、データを別の端末でも確認できるようになります。
         </p>
         <SignInButton />
       </section>

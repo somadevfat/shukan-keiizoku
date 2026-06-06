@@ -24,12 +24,30 @@ test("ローカル利用モードでもログアウト操作を表示する", as
   await expect(page.getByRole("button", { name: "ログアウト" })).toBeVisible();
 });
 
-test("未認証利用者をログイン画面へ移動する", async ({ browser }) => {
+test("Cookieがない利用者をゲストとして開始しデータを保持する", async ({
+  browser,
+}) => {
   const context = await browser.newContext({ extraHTTPHeaders: {} });
   const page = await context.newPage();
+  const taskName = `ゲストタスク-${Date.now()}`;
 
   await page.goto("http://127.0.0.1:3000/");
 
-  await expect(page).toHaveURL(/\/signin$/);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(
+    page.getByRole("link", { name: "データを保護する" }),
+  ).toBeVisible();
+  const guestCookie = (await context.cookies()).find(
+    (cookie) => cookie.name === "syukan_guest_token",
+  );
+  expect(guestCookie?.httpOnly).toBe(true);
+  expect(guestCookie?.sameSite).toBe("Lax");
+
+  await page.getByLabel("新しいタスク").fill(taskName);
+  await page.getByRole("button", { name: "追加" }).click();
+  await page.reload();
+
+  await expect(page.getByText(taskName, { exact: true })).toBeVisible();
+  await context.request.delete("http://127.0.0.1:3000/api/e2e/cleanup");
   await context.close();
 });

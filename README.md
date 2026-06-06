@@ -33,7 +33,9 @@ AUTH_GOOGLE_SECRET="Google OAuth クライアントシークレット"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-Google認証を設定する前だけローカル利用モードを使う場合は、開発環境に限り `AUTH_BYPASS_LOCAL_USER=true` を設定します。本番では必ず `false` にします。
+通常はログインなしのゲストとして利用を開始し、HttpOnly CookieでDB上の匿名ユーザーを識別します。Googleログインすると、ゲスト期間のデータをログインユーザーへ引き継ぎます。
+
+E2Eなどで固定のローカル利用者を使う場合だけ、開発環境に限り `AUTH_BYPASS_LOCAL_USER=true` を設定します。本番では必ず `false` にします。
 
 開発サーバーを起動します。
 

@@ -1,14 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 
 import styles from "./page.module.css";
 
 type AuthControlsProps = {
+  readonly isGuest: boolean;
   readonly userName: string;
 };
 
-export function AuthControls({ userName }: AuthControlsProps) {
+export function AuthControls({ isGuest, userName }: AuthControlsProps) {
+  if (isGuest) {
+    return (
+      <Link href="/signin" className={styles.protectDataLink}>
+        データを保護する
+      </Link>
+    );
+  }
+
   return (
     <div className={styles.authControls}>
       <span

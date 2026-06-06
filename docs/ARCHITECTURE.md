@@ -192,6 +192,7 @@ src/
 方針:
 
 - multi-user 前提にする。
+- 初回アクセス時は HttpOnly Cookie と DB 上の匿名ユーザーを紐付け、ログイン画面を経由せず利用を開始する。
 - Auth.js の database session と Prisma Adapter を使用する。
 - 本番環境ではGoogle OAuthを必須とし、ローカル利用モードを無効にする。
 - ユーザーデータは必ず `userId` で所有者を分離する。

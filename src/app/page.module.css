@@ -72,6 +72,13 @@
   font-size: 12px;
 }
 
+.protectDataLink {
+  color: #315f48;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
 .profile {
   background: #2e5843;
   color: #fff;
