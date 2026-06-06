@@ -49,41 +49,42 @@
   font-weight: 650;
 }
 
-.timer {
-  padding-bottom: 48px;
-  border-bottom: 1px solid #e3e7e3;
-}
-
-.timerHeading h2,
-.sectionHeading h2 {
-  margin-top: 6px;
-  font-size: 18px;
-  font-weight: 620;
+.inlineTimer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .time {
-  margin: 64px 0 32px;
-  color: #1e2821;
   font-family: var(--font-geist-mono);
-  font-size: 72px;
+  font-size: 20px;
   font-variant-numeric: tabular-nums;
-  font-weight: 520;
-  line-height: 1;
-  text-align: center;
+  font-weight: 600;
+  color: #2e5843;
+}
+
+.startButton,
+.stopButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .startButton {
-  display: block;
-  width: min(100%, 320px);
-  height: 52px;
-  margin: 0 auto;
   border: 0;
-  border-radius: 6px;
   background: #2e5843;
   color: #fff;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 650;
 }
 
 .startButton:hover {
@@ -91,17 +92,13 @@
 }
 
 .stopButton {
-  display: block;
-  width: min(100%, 320px);
-  height: 52px;
-  margin: 0 auto;
   border: 1px solid #9b4a42;
-  border-radius: 6px;
   background: #fff;
   color: #823c35;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 650;
+}
+
+.stopButton:hover {
+  background: #fdf5f5;
 }
 
 .startButton:disabled,
@@ -111,7 +108,7 @@
 }
 
 .progressBlock {
-  margin-top: 48px;
+  margin-top: 14px;
 }
 
 .progressCopy {
@@ -122,7 +119,7 @@
 
 .progressTrack {
   height: 5px;
-  margin-top: 12px;
+  margin-top: 8px;
   overflow: hidden;
   background: #e2e8e3;
 }
@@ -135,7 +132,7 @@
 }
 
 .comparison {
-  margin-top: 12px;
+  margin-top: 8px;
   color: #6e746f;
   font-size: 12px;
 }
@@ -205,48 +202,55 @@
   font-weight: 650;
 }
 
+.sectionHeading h2 {
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 620;
+}
+
 .taskList {
   margin-top: 32px;
   list-style: none;
 }
 
-.taskList > li {
+.taskCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
   gap: 24px;
-  padding: 20px 0;
+  padding: 24px 0;
   border-top: 1px solid #e3e7e3;
 }
 
-.taskList > li > div {
-  display: grid;
-  align-content: center;
-  gap: 6px;
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.taskList strong {
-  font-size: 15px;
+.taskHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
-.taskList span {
+.taskName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #202722;
+}
+
+.taskTime {
   color: #727973;
-  font-size: 12px;
+  font-size: 13px;
 }
 
-.compactStartButton {
-  width: fit-content;
-  margin-top: 5px;
-  border: 0;
-  background: transparent;
-  color: #315f48;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 650;
+.timerWrapper {
+  margin-top: 4px;
 }
 
-.compactStartButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
+.goalSection {
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 480px) {
@@ -258,13 +262,204 @@
     margin-bottom: 40px;
   }
 
-  .time {
-    font-size: 48px;
-    margin-top: 56px;
-  }
-
-  .taskList > li {
+  .taskCard {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+
+/* 履歴画面用スタイル */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.historyLink,
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4c554e;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.historyLink:hover,
+.backButton:hover {
+  border-color: #2e5843;
+  background: #f6f8f6;
+  color: #2e5843;
+}
+
+.streakSection {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e3e7e3;
+}
+
+.streakCardContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.streakCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid #e3e7e3;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.streakEmoji {
+  font-size: 28px;
+}
+
+.streakValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #202722;
+  line-height: 1.2;
+}
+
+.streakLabel {
+  font-size: 11px;
+  color: #727973;
+  margin-top: 2px;
+}
+
+.calendarSection {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e3e7e3;
+}
+
+.calendarMonths {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.calendarMonth {
+  background: #fff;
+  border: 1px solid #e3e7e3;
+  border-radius: 6px;
+  padding: 18px;
+}
+
+.calendarMonthTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #202722;
+  margin-bottom: 12px;
+}
+
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  font-size: 11px;
+  color: #727973;
+  font-weight: 600;
+}
+
+.calendarDaysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 8px;
+  text-align: center;
+}
+
+.calendarDay,
+.emptyDay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 12px;
+  color: #4c554e;
+  font-variant-numeric: tabular-nums;
+}
+
+.activeDay {
+  background: #e2f0e7;
+  color: #2e5843;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.historyList {
+  margin-top: 24px;
+  list-style: none;
+}
+
+.historyItem {
+  padding: 18px 0;
+  border-top: 1px solid #e3e7e3;
+}
+
+.historyItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.historyDate {
+  font-size: 15px;
+  font-weight: 600;
+  color: #202722;
+}
+
+.historyTotal {
+  font-size: 13px;
+  color: #2e5843;
+  font-weight: 600;
+}
+
+.activityDetailList {
+  list-style: none;
+  padding-left: 8px;
+  border-left: 2px solid #e2e8e3;
+  display: grid;
+  gap: 6px;
+}
+
+.activityDetailItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6e746f;
+}
+
+.activityDetailItem strong {
+  color: #4c554e;
+  font-weight: 600;
+}
+
+.emptyMessage {
+  margin-top: 24px;
+  color: #727973;
+  font-size: 13px;
+  text-align: center;
+  padding: 40px 0;
 }

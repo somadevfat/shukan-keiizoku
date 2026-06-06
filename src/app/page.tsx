@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   createTask,
   setDailyGoal,
@@ -12,14 +14,14 @@ import { getDashboardData } from "@/server/local-dashboard";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * 習慣カウンターアプリのメイン画面（ホームページ）です。
+ * @responsibility: ユーザーのダッシュボード情報を取得し、タスク一覧や目標達成状況、ストップウォッチを提示する。
+ */
 export default async function Home() {
+  /* ダッシュボードのデータを一括で取得する */
   const dashboard = await getDashboardData();
-  const activeTask =
-    dashboard.tasks.find(
-      (task) => task.id === dashboard.activeMeasurement?.taskId,
-    ) ??
-    dashboard.tasks[0] ??
-    null;
+  const hasNoTasks = dashboard.tasks.length === 0;
 
   return (
     <main className={styles.page}>
@@ -28,12 +30,18 @@ export default async function Home() {
           <p className={styles.date}>{dashboard.dateLabel}</p>
           <h1>今日の積み上げ</h1>
         </div>
-        <span className={styles.profile} aria-label="ローカル利用者">
-          L
-        </span>
+        <div className={styles.headerActions}>
+          <Link href="/history" className={styles.historyLink}>
+            履歴
+          </Link>
+          <span className={styles.profile} aria-label="ローカル利用者">
+            L
+          </span>
+        </div>
       </header>
 
-      {activeTask === null ? (
+      {/* タスクが1つも存在しない場合のみ、初期化を促すガイド表示を表示する */}
+      {hasNoTasks ? (
         <section className={styles.emptyState}>
           <p className={styles.label}>最初のタスク</p>
           <h2>続けたいことを登録しましょう</h2>
@@ -41,71 +49,7 @@ export default async function Home() {
             登録すると、ストップウォッチで実際の取り組み時間を記録できます。
           </p>
         </section>
-      ) : (
-        <section className={styles.timer} aria-labelledby="current-task">
-          <div className={styles.timerHeading}>
-            <div>
-              <p className={styles.label}>
-                {dashboard.activeMeasurement === null
-                  ? "次に取り組むタスク"
-                  : "計測中"}
-              </p>
-              <h2 id="current-task">{activeTask.name}</h2>
-            </div>
-          </div>
-
-          <TimerControls
-            taskId={activeTask.id}
-            activeMeasurement={dashboard.activeMeasurement}
-            startAction={startMeasurementFromForm}
-            stopAction={stopMeasurementFromForm}
-          />
-
-          <div className={styles.progressBlock}>
-            <div className={styles.progressCopy}>
-              <span>今日 {formatMinutes(activeTask.todaySeconds)}</span>
-              <span>
-                目標{" "}
-                {activeTask.goalSeconds === null
-                  ? "未設定"
-                  : formatMinutes(activeTask.goalSeconds)}
-              </span>
-            </div>
-            {activeTask.goalSeconds !== null && (
-              <div
-                className={styles.progressTrack}
-                role="progressbar"
-                aria-label="今日の目標達成率"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.min(
-                  100,
-                  Math.round(
-                    (activeTask.todaySeconds / activeTask.goalSeconds) * 100,
-                  ),
-                )}
-              >
-                <span
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      Math.round(
-                        (activeTask.todaySeconds / activeTask.goalSeconds) *
-                          100,
-                      ),
-                    )}%`,
-                  }}
-                />
-              </div>
-            )}
-            <p className={styles.comparison}>
-              {activeTask.comparisonPercentage === null
-                ? "今日の目標を設定すると、昨日との比較を表示します。"
-                : `昨日の実績に対して ${activeTask.comparisonPercentage >= 0 ? "+" : ""}${activeTask.comparisonPercentage}% の目標です。`}
-            </p>
-          </div>
-        </section>
-      )}
+      ) : null}
 
       <section className={styles.tasksSection} aria-labelledby="tasks-title">
         <div className={styles.sectionHeading}>
@@ -115,6 +59,7 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* 新しい習慣タスクを作成するフォーム */}
         <form action={createTask} className={styles.createForm}>
           <label>
             <span>新しいタスク</span>
@@ -128,44 +73,101 @@ export default async function Home() {
           <button type="submit">追加</button>
         </form>
 
+        {/* 登録された習慣タスクをカード形式で列挙するリスト */}
         <ul className={styles.taskList}>
           {dashboard.tasks.map((task) => (
-            <li key={task.id}>
-              <div>
-                <strong>{task.name}</strong>
-                <span>今日 {formatMinutes(task.todaySeconds)}</span>
-                {dashboard.activeMeasurement?.taskId !== task.id && (
-                  <form action={startMeasurementFromForm}>
-                    <input type="hidden" name="taskId" value={task.id} />
-                    <button
-                      className={styles.compactStartButton}
-                      type="submit"
-                      disabled={dashboard.activeMeasurement !== null}
+            <li key={task.id} className={styles.taskCard}>
+              <div className={styles.taskInfo}>
+                <div className={styles.taskHeader}>
+                  <strong className={styles.taskName}>{task.name}</strong>
+                  <span className={styles.taskTime}>
+                    今日 {formatMinutes(task.todaySeconds)}
+                  </span>
+                </div>
+
+                {/* 各タスク個別のストップウォッチコントロールを設置 */}
+                <div className={styles.timerWrapper}>
+                  <TimerControls
+                    taskId={task.id}
+                    activeMeasurement={dashboard.activeMeasurement}
+                    startAction={startMeasurementFromForm}
+                    stopAction={stopMeasurementFromForm}
+                  />
+                </div>
+
+                {/* 目標時間および進捗率、昨日との実績比（目標が設定されている場合のみ表示） */}
+                {task.goalSeconds !== null && (
+                  <div className={styles.progressBlock}>
+                    <div className={styles.progressCopy}>
+                      <span>目標 {formatMinutes(task.goalSeconds)}</span>
+                      <span>
+                        達成率{" "}
+                        {Math.min(
+                          100,
+                          Math.round(
+                            (task.todaySeconds / task.goalSeconds) * 100,
+                          ),
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div
+                      className={styles.progressTrack}
+                      role="progressbar"
+                      aria-label={`${task.name}の今日の目標達成率`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.min(
+                        100,
+                        Math.round(
+                          (task.todaySeconds / task.goalSeconds) * 100,
+                        ),
+                      )}
                     >
-                      このタスクを計測
-                    </button>
-                  </form>
+                      <span
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(
+                              (task.todaySeconds / task.goalSeconds) * 100,
+                            ),
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                    {task.comparisonPercentage !== null && (
+                      <p className={styles.comparison}>
+                        昨日の実績に対して{" "}
+                        {task.comparisonPercentage >= 0 ? "+" : ""}
+                        {task.comparisonPercentage}% の目標です。
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
-              <form action={setDailyGoal} className={styles.goalForm}>
-                <input type="hidden" name="taskId" value={task.id} />
-                <label>
-                  <span>今日の目標（分）</span>
-                  <input
-                    type="number"
-                    name="goalMinutes"
-                    min={1}
-                    max={1_440}
-                    required
-                    defaultValue={
-                      task.goalSeconds === null
-                        ? undefined
-                        : task.goalSeconds / 60
-                    }
-                  />
-                </label>
-                <button type="submit">保存</button>
-              </form>
+
+              {/* 日別の目標時間を設定するフォームセクション */}
+              <div className={styles.goalSection}>
+                <form action={setDailyGoal} className={styles.goalForm}>
+                  <input type="hidden" name="taskId" value={task.id} />
+                  <label>
+                    <span>今日の目標（分）</span>
+                    <input
+                      type="number"
+                      name="goalMinutes"
+                      min={1}
+                      max={1_440}
+                      required
+                      defaultValue={
+                        task.goalSeconds === null
+                          ? undefined
+                          : task.goalSeconds / 60
+                      }
+                    />
+                  </label>
+                  <button type="submit">保存</button>
+                </form>
+              </div>
             </li>
           ))}
         </ul>
