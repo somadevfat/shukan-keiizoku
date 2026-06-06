@@ -55,6 +55,7 @@ next-env.d.ts
 *.pfx
 *.der
 *.crt
+client_secret_*.json
 
 # エディタ・IDE固有の設定（ローカル設定やシークレットの混入防止）
 .idea/
