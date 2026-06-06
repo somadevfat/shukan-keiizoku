@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
@@ -32,6 +34,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +42,31 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated
+/src/generated
+
+/src/generated/prisma
+
+# セキュリティ関連（秘密鍵・暗号化証明書など）
+*.key
+*.pub
+*.p12
+*.pfx
+*.der
+*.crt
+
+# エディタ・IDE固有の設定（ローカル設定やシークレットの混入防止）
+.idea/
+.vscode/
+*.sw?
+
+# OS固有の一時ファイル
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ローカルデータベース（認証情報やテストデータ等）
+*.db
+*.sqlite
+*.sqlite-journal
