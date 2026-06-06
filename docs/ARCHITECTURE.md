@@ -192,6 +192,8 @@ src/
 方針:
 
 - multi-user 前提にする。
+- Auth.js の database session と Prisma Adapter を使用する。
+- 本番環境ではGoogle OAuthを必須とし、ローカル利用モードを無効にする。
 - ユーザーデータは必ず `userId` で所有者を分離する。
 - server action の入口でログイン状態を確認する。
 - repository 層でも `userId` を条件に含める。

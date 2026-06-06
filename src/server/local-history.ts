@@ -3,8 +3,8 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { calculateStreak } from "@/features/streaks/domain/calculate-streak";
+import { requireCurrentUser } from "@/server/current-user";
 import { db } from "@/server/db";
-import { ensureLocalUser } from "@/server/local-dashboard";
 
 export type DailyTaskActivity = {
   readonly taskId: string;
@@ -33,7 +33,7 @@ export type HistoryData = {
  */
 export async function getHistoryData(now = new Date()): Promise<HistoryData> {
   /* ローカルユーザーレコードが存在することを確認し取得する */
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   /* 削除されていないすべての計測セッションを最新順に取得する */
   const sessions = await db.measurementSession.findMany({

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { requireCurrentUser } from "@/server/current-user";
 import { db } from "@/server/db";
-import { ensureLocalUser } from "@/server/local-dashboard";
 
 /**
  * E2Eテスト専用のクリーンアップエンドポイントです（開発環境のみ有効）。
@@ -16,7 +16,7 @@ export async function DELETE(): Promise<NextResponse> {
     );
   }
 
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   /* ローカルユーザーに紐づく全タスクをカスケード削除する（関連する計測セッション・目標も削除される） */
   await db.habitTask.deleteMany({

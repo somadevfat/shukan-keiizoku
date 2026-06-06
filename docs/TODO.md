@@ -41,9 +41,14 @@
 - [完了] 認証前でも主要機能が実際に動くローカル利用モードを実装する
   - タスク作成、目標設定、計測開始・停止、実績保存を DB と接続する。
   - 静的なサンプル値を画面から取り除く。
-- [未着手] Auth.js と Google OAuth を設定する
+- [完了] Auth.js と Google OAuth を設定する
+  - Auth.js の database session と Prisma Adapter を使用する。
+  - Googleログイン画面とログアウト操作を実装する。
+  - Googleプロバイダー設定と未認証リダイレクトを desktop / mobile E2E で確認する。
 - [未着手] ユーザーのタイムゾーンを保存する
-- [未着手] 認証・認可の共通処理を実装する
+- [完了] 認証・認可の共通処理を実装する
+  - 画面、server action、server query で共通の認証済みユーザー取得処理を使用する。
+  - 本番環境ではローカル利用モードを無効にする。
 
 ## マイルストーン 3: 習慣タスク
 
@@ -100,5 +105,5 @@
 - [未着手] Oracle Cloud Infrastructure 向け運用手順を作成する
 - [未着手] backup / restore 手順を作成・検証する
 - [未着手] production smoke test を作成する
-- [未着手] npm audit の moderate 脆弱性を継続監視する
-  - 現在は Next.js / Prisma の依存に 5 件あり、破壊的 downgrade 以外の自動修正はない。
+- [未着手] npm audit の脆弱性を継続監視する
+  - 現在は依存パッケージに low 2件、moderate 7件がある。

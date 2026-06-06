@@ -9,6 +9,7 @@ import {
   updateTask,
 } from "./actions";
 import { ArchiveTaskForm } from "./archive-task-form";
+import { AuthControls } from "./auth-controls";
 import styles from "./page.module.css";
 import { TimerControls } from "./timer-controls";
 
@@ -49,9 +50,7 @@ export default async function Home({ searchParams }: HomeProps) {
           <Link href="/history" className={styles.historyLink}>
             履歴
           </Link>
-          <span className={styles.profile} aria-label="ローカル利用者">
-            L
-          </span>
+          <AuthControls userName={dashboard.currentUserName} />
         </div>
       </header>
 

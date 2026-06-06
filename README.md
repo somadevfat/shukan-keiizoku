@@ -24,6 +24,17 @@ cp .env.example .env
 npm run db:migrate:deploy
 ```
 
+`.env` にGoogle OAuthのクライアント情報とAuth.js用シークレットを設定します。Google Cloud Consoleの承認済みリダイレクトURIには `http://localhost:3000/api/auth/callback/google` を登録します。
+
+```dotenv
+AUTH_SECRET="十分に長いランダム文字列"
+AUTH_GOOGLE_ID="Google OAuth クライアントID"
+AUTH_GOOGLE_SECRET="Google OAuth クライアントシークレット"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+Google認証を設定する前だけローカル利用モードを使う場合は、開発環境に限り `AUTH_BYPASS_LOCAL_USER=true` を設定します。本番では必ず `false` にします。
+
 開発サーバーを起動します。
 
 ```bash

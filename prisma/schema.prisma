@@ -15,10 +15,50 @@ model User {
   timeZone            String               @default("Asia/Tokyo")
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  emailVerified       DateTime?
+  accounts            Account[]
+  sessions            Session[]
   habitTasks          HabitTask[]
   measurementSessions MeasurementSession[]
   dailyGoals          DailyGoal[]
   continuityReflections ContinuityReflection[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model HabitTask {

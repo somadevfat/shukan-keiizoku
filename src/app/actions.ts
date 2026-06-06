@@ -6,7 +6,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { z } from "zod";
 
 import { db } from "@/server/db";
-import { ensureLocalUser } from "@/server/local-dashboard";
+import { requireCurrentUser } from "@/server/current-user";
 
 const taskNameSchema = z.string().trim().min(1).max(80);
 const idSchema = z.string().min(1);
@@ -15,7 +15,7 @@ const reflectionTextSchema = z.string().trim().max(1_000);
 
 export async function createTask(formData: FormData): Promise<void> {
   const name = taskNameSchema.parse(formData.get("name"));
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   await db.habitTask.create({
     data: { name, userId: user.id },
@@ -27,7 +27,7 @@ export async function createTask(formData: FormData): Promise<void> {
 export async function updateTask(formData: FormData): Promise<void> {
   const taskId = idSchema.parse(formData.get("taskId"));
   const name = taskNameSchema.parse(formData.get("name"));
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   const updated = await db.habitTask.updateMany({
     where: { id: taskId, userId: user.id, archivedAt: null },
@@ -44,7 +44,7 @@ export async function updateTask(formData: FormData): Promise<void> {
 export async function archiveTask(formData: FormData): Promise<void> {
   const taskId = idSchema.parse(formData.get("taskId"));
   const confirmation = z.literal("archive").parse(formData.get("confirmation"));
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   await db.$transaction(async (transaction) => {
     const activeMeasurement = await transaction.measurementSession.findFirst({
@@ -76,7 +76,7 @@ export async function archiveTask(formData: FormData): Promise<void> {
 export async function setDailyGoal(formData: FormData): Promise<void> {
   const taskId = idSchema.parse(formData.get("taskId"));
   const goalMinutes = goalMinutesSchema.parse(formData.get("goalMinutes"));
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
   const task = await db.habitTask.findFirstOrThrow({
     where: { id: taskId, userId: user.id, archivedAt: null },
   });
@@ -105,7 +105,7 @@ export async function setDailyGoal(formData: FormData): Promise<void> {
 
 export async function startMeasurement(taskIdInput: string): Promise<void> {
   const taskId = idSchema.parse(taskIdInput);
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   await db.$transaction(async (transaction) => {
     await transaction.habitTask.findFirstOrThrow({
@@ -135,7 +135,7 @@ export async function stopMeasurement(
   measurementIdInput: string,
 ): Promise<void> {
   const measurementId = idSchema.parse(measurementIdInput);
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   await db.measurementSession.updateMany({
     where: {
@@ -171,7 +171,7 @@ export async function saveContinuityReflection(
     .parse(formData.get("reflectionId") ?? undefined);
   const obstacle = reflectionTextSchema.parse(formData.get("obstacle"));
   const nextAction = reflectionTextSchema.parse(formData.get("nextAction"));
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
 
   if (reflectionId === undefined) {
     await db.continuityReflection.create({

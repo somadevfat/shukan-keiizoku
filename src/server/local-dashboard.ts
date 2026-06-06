@@ -5,10 +5,8 @@ import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 
 import { calculateGoalComparison } from "@/features/goals/domain/calculate-goal-comparison";
 import { sumCompletedSeconds } from "@/features/measurements/domain/sum-completed-seconds";
+import { requireCurrentUser } from "@/server/current-user";
 import { db } from "@/server/db";
-
-const LOCAL_USER_EMAIL = "local@example.invalid";
-const DEFAULT_TIME_ZONE = "Asia/Tokyo";
 
 export type DashboardTask = {
   readonly id: string;
@@ -26,6 +24,7 @@ export type ActiveMeasurement = {
 };
 
 export type DashboardData = {
+  readonly currentUserName: string;
   readonly dateLabel: string;
   readonly tasks: readonly DashboardTask[];
   readonly activeMeasurement: ActiveMeasurement | null;
@@ -55,22 +54,10 @@ function getDayRange(now: Date, timeZone: string, offsetDays: number) {
   };
 }
 
-export async function ensureLocalUser() {
-  return db.user.upsert({
-    where: { email: LOCAL_USER_EMAIL },
-    update: {},
-    create: {
-      email: LOCAL_USER_EMAIL,
-      name: "ローカル利用者",
-      timeZone: DEFAULT_TIME_ZONE,
-    },
-  });
-}
-
 export async function getDashboardData(
   now = new Date(),
 ): Promise<DashboardData> {
-  const user = await ensureLocalUser();
+  const user = await requireCurrentUser();
   const today = getDayRange(now, user.timeZone, 0);
   const yesterday = getDayRange(now, user.timeZone, 1);
 
@@ -102,6 +89,7 @@ export async function getDashboardData(
   ]);
 
   return {
+    currentUserName: user.name ?? user.email,
     dateLabel: new Intl.DateTimeFormat("ja-JP", {
       dateStyle: "long",
       timeZone: user.timeZone,
