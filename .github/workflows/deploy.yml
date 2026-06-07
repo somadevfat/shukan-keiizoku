@@ -14,15 +14,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  build:
     if: github.event.release.prerelease == false
-    runs-on:
-      - self-hosted
-      - production
+    runs-on: ubuntu-latest
     environment: production
     env:
       DATABASE_URL: postgresql://build:build@localhost:5432/build
-      DEPLOY_DIR: /opt/syukan-counter-todo
+    outputs:
+      image: ${{ steps.image.outputs.image }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,10 +57,13 @@ jobs:
           npm run build
 
       - name: コンテナイメージ名を設定
+        id: image
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:$RELEASE_TAG" >> "$GITHUB_ENV"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:$RELEASE_TAG"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
           echo "SHA_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "LATEST_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> "$GITHUB_ENV"
 
@@ -82,6 +84,20 @@ jobs:
             ${{ env.SHA_IMAGE }}
             ${{ env.LATEST_IMAGE }}
 
+  deploy:
+    needs: build
+    runs-on:
+      - self-hosted
+      - production
+    environment: production
+    env:
+      DEPLOY_DIR: /opt/syukan-counter-todo
+      IMAGE: ${{ needs.build.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
       - name: production設定を配置
         run: |
           install -d -m 700 "$DEPLOY_DIR/deploy" "$DEPLOY_DIR/scripts"
@@ -101,3 +117,11 @@ jobs:
           cd "$DEPLOY_DIR"
           APP_IMAGE="$IMAGE" docker compose --env-file .env.production -f compose.production.yaml \
             up -d --pull always --remove-orphans --wait --wait-timeout 180
+
+      - name: デプロイ失敗を診断
+        if: failure()
+        run: |
+          cd "$DEPLOY_DIR"
+          docker compose --env-file .env.production -f compose.production.yaml ps || true
+          docker compose --env-file .env.production -f compose.production.yaml logs --tail=200 app db caddy || true
+          docker inspect syukan-counter-todo-app-1 --format '{{json .State.Health}}' || true

@@ -7,7 +7,8 @@
 - Caddy: `80` / `443` を公開し、TLS を自動更新する。
 - Next.js: Docker 内部の `3000` のみで待ち受ける。
 - PostgreSQL: Docker 内部の `5432` のみで待ち受ける。
-- GitHub Actions Self-hosted Runner: OCI VM 内で動作し、SemVer Release を起点に検査、GHCR への image push、同一 VM の更新を行う。
+- GitHub-hosted Runner: SemVer Release を起点に品質検査、image build、GHCR push を行う。
+- GitHub Actions Self-hosted Runner: OCI VM 内で動作し、version固定imageのpullと同一VMの更新だけを行う。
 
 単一 VM 構成のため、VM 障害中は停止する。利用者や重要度が増えたら PostgreSQL を OCI Database 等へ分離する。
 
@@ -116,12 +117,12 @@ GitHub Actions の workflow permission で packages への write を許可する
 
 `.github/workflows/deploy.yml` はGitHub WebでReleaseが公開された後に次を実行する。タグをCLIからpushしただけではデプロイしない。Draft ReleaseとPre-releaseもデプロイしない。
 
-1. タグが正しいSemVer形式であり、対象commitが`main`に含まれることを検証する。
-2. format、lint、typecheck、unit test、coverage、audit、production buildを再検査する。
-3. `v1.0.0`、commit SHA、`latest`の3タグで同一imageをGHCRへpushする。
-4. OCI VM 内の Self-hosted Runner が production Compose、Caddy、運用スクリプトを配置する。
-5. 同一 VM 上で version 固定 image を pull し、migrationを適用して起動する。
-6. DB接続を含む`/api/health`が成功するまで待つ。
+1. GitHub-hosted Runner がタグ形式と対象commitの`main`所属を検証する。
+2. GitHub-hosted Runner がformat、lint、typecheck、unit test、coverage、audit、production buildを再検査する。
+3. GitHub-hosted Runner が`v1.0.0`、commit SHA、`latest`の3タグで同一imageをGHCRへpushする。
+4. OCI VM 内のSelf-hosted Runnerがproduction Compose、Caddy、運用スクリプトを配置する。
+5. OCI VM 内のSelf-hosted Runnerがversion固定imageをpullし、migrationを適用して起動する。
+6. DB接続を含む`/api/health`が成功するまで待つ。失敗時はコンテナ状態とログをActionログへ自動出力する。
    Release公開後にworkflowが失敗した場合、そのタグは修正せず、原因を修正して次のPATCH versionを公開する。
 
 起動後に確認する。
