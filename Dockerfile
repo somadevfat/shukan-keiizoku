@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run db:generate
-RUN npm run build
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run build
 
 FROM base AS runner
 WORKDIR /app

@@ -18,6 +18,8 @@ jobs:
     if: github.event.release.prerelease == false
     runs-on: ubuntu-latest
     environment: production
+    env:
+      DATABASE_URL: postgresql://build:build@localhost:5432/build
     steps:
       - uses: actions/checkout@v4
         with:
