@@ -7,11 +7,21 @@ import {
   GUEST_COOKIE_NAME,
 } from "@/server/guest-identity";
 
+function getHomeUrl(request: Request): URL {
+  const appBaseUrl = process.env.NEXTAUTH_URL;
+
+  if (appBaseUrl !== undefined) {
+    return new URL("/", appBaseUrl);
+  }
+
+  return new URL("/", request.url);
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
   const currentToken = (await cookies()).get(GUEST_COOKIE_NAME)?.value;
   const currentGuest =
     currentToken === undefined ? null : await findGuestUser(currentToken);
-  const response = NextResponse.redirect(new URL("/", request.url));
+  const response = NextResponse.redirect(getHomeUrl(request));
 
   if (currentGuest !== null) {
     return response;
