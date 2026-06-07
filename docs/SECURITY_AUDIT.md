@@ -22,6 +22,7 @@
 - `AUTH_BYPASS_LOCAL_USER` と E2E cleanup API は `NODE_ENV=production` では動作しない。
 - production 設定の危険な初期値、HTTPS 未使用、秘密情報ファイルの不適切な権限をデプロイ前に検査する。
 - DB の backup / restore スクリプトを作成し、使い捨て PostgreSQL への復元を検証した。
+- 本番デプロイは `main` に含まれる変更不可の SemVer タグを起点にし、version 固定 image で実行する。
 
 ## 公開前の必須対応
 

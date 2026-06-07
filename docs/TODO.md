@@ -112,6 +112,8 @@
   - 重大な問題を修正し、残存リスクを運用手順へ記録する。
 - [完了] Oracle Cloud Infrastructure 向け運用手順を作成する
   - 初回デプロイと GitHub Actions による CD の手順を文書化する。
+- [完了] SemVer タグによる本番リリース運用へ変更する
+  - `vMAJOR.MINOR.PATCH` タグを起点に検査、image 発行、デプロイ、GitHub Release 作成を行う。
 - [完了] production 設定の事前検査を自動化する
   - production Compose と環境変数の不足・危険な設定をデプロイ前に検出する。
 - [完了] backup / restore 手順を作成・検証する
