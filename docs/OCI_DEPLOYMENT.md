@@ -7,7 +7,7 @@
 - Caddy: `80` / `443` を公開し、TLS を自動更新する。
 - Next.js: Docker 内部の `3000` のみで待ち受ける。
 - PostgreSQL: Docker 内部の `5432` のみで待ち受ける。
-- GitHub Actions: SemVer タグを起点に検査し、GHCR へ image を push して OCI Compute を更新する。
+- GitHub Actions Self-hosted Runner: OCI VM 内で動作し、SemVer Release を起点に検査、GHCR への image push、同一 VM の更新を行う。
 
 単一 VM 構成のため、VM 障害中は停止する。利用者や重要度が増えたら PostgreSQL を OCI Database 等へ分離する。
 
@@ -27,12 +27,13 @@
 
 ## 2. VM の準備
 
-Docker Engine と Docker Compose plugin を公式手順でインストールし、専用デプロイユーザーを作る。
+Docker Engine と Docker Compose plugin を公式手順でインストールし、GitHub Actions Self-hosted Runner 専用ユーザーを作る。
 
 ```bash
-sudo adduser deploy
-sudo usermod -aG docker deploy
-sudo install -d -o deploy -g deploy -m 700 /opt/syukan-counter-todo
+sudo adduser --disabled-password --gecos "" github-runner
+sudo usermod -aG docker github-runner
+sudo install -d -o github-runner -g github-runner -m 700 /opt/actions-runner
+sudo install -d -o github-runner -g github-runner -m 700 /opt/syukan-counter-todo
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow from <自分の固定IP> to any port 22 proto tcp
@@ -41,7 +42,15 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-`deploy` ユーザー用の専用 SSH 公開鍵を `~deploy/.ssh/authorized_keys` に登録する。通常の管理鍵とは分ける。
+GitHub repository の `Settings` → `Actions` → `Runners` から Linux Runner を追加し、`github-runner` ユーザーで `/opt/actions-runner` にインストールする。Runner には `production` ラベルを設定し、systemd service として起動する。
+
+```bash
+sudo -iu github-runner docker version
+sudo -iu github-runner docker compose version
+sudo ./svc.sh status
+```
+
+Runner は外向き通信で GitHub に接続するため、GitHub Actions 用に `22/tcp` を公開する必要はない。
 
 ## 3. 本番環境変数
 
@@ -55,6 +64,14 @@ openssl rand -base64 32
 vi .env.production
 chmod 600 .env.production
 ./validate-production-config.sh
+```
+
+`.env.production` とデプロイ先は Runner が読み書きできる必要がある。初回だけ管理ユーザーで確認する。
+
+```bash
+sudo chown -R github-runner:github-runner /opt/syukan-counter-todo
+sudo chmod 700 /opt/syukan-counter-todo
+sudo chmod 600 /opt/syukan-counter-todo/.env.production
 ```
 
 - 1 つ目の hex 値を `POSTGRES_PASSWORD` と `DATABASE_URL` の password に同じ値で設定する。
@@ -71,20 +88,9 @@ docker login ghcr.io
 
 ## 4. GitHub の設定
 
-GitHub repository の `production` Environment を作り、必要なら required reviewer を設定する。次の Environment secrets を登録する。
+GitHub repository の `production` Environment を作り、required reviewer を設定する。Self-hosted Runner は Docker 操作権限を持つため、意図しない workflow が本番 Runner で動かないように、`main` の branch protection と CODEOWNERS による `.github/workflows/**` のレビューも設定する。
 
-| Secret                | 内容                                 |
-| --------------------- | ------------------------------------ |
-| `OCI_HOST`            | Compute の Public IP または hostname |
-| `OCI_USER`            | `deploy`                             |
-| `OCI_SSH_PRIVATE_KEY` | デプロイ専用秘密鍵                   |
-| `OCI_SSH_KNOWN_HOSTS` | 検証済み host key                    |
-
-host key は管理端末から取得し、OCI console 等で fingerprint を照合してから登録する。
-
-```bash
-ssh-keyscan -H <OCI_HOST>
-```
+Self-hosted Runner 方式では `OCI_HOST`、`OCI_USER`、SSH秘密鍵、known hosts の GitHub Secrets は不要になる。登録済みの場合は削除する。
 
 GitHub Actions の workflow permission で packages への write を許可する。GHCR package を private にする場合は、repository から package への Actions access も許可する。
 
@@ -113,8 +119,8 @@ GitHub Actions の workflow permission で packages への write を許可する
 1. タグが正しいSemVer形式であり、対象commitが`main`に含まれることを検証する。
 2. format、lint、typecheck、unit test、coverage、audit、production buildを再検査する。
 3. `v1.0.0`、commit SHA、`latest`の3タグで同一imageをGHCRへpushする。
-4. OCI Computeへproduction Compose、Caddy、運用スクリプトを転送する。
-5. version固定imageをpullし、migrationを適用して起動する。
+4. OCI VM 内の Self-hosted Runner が production Compose、Caddy、運用スクリプトを配置する。
+5. 同一 VM 上で version 固定 image を pull し、migrationを適用して起動する。
 6. DB接続を含む`/api/health`が成功するまで待つ。
    Release公開後にworkflowが失敗した場合、そのタグは修正せず、原因を修正して次のPATCH versionを公開する。
 

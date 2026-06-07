@@ -121,6 +121,8 @@
   - Prisma Client 生成と Next.js build にだけ使用する非機密のダミーURLを設定する。
 - [完了] Docker build 用の public ディレクトリを管理する
   - 静的ファイルが未追加でも production image build が成功するようにする。
+- [完了] 本番 CD を OCI Self-hosted Runner 方式へ変更する
+  - GitHub-hosted Runner からの SSH を廃止し、OCI VM 内で直接デプロイする。
 - [完了] production 設定の事前検査を自動化する
   - production Compose と環境変数の不足・危険な設定をデプロイ前に検出する。
 - [完了] backup / restore 手順を作成・検証する

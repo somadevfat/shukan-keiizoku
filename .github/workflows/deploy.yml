@@ -16,10 +16,13 @@ concurrency:
 jobs:
   release:
     if: github.event.release.prerelease == false
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - production
     environment: production
     env:
       DATABASE_URL: postgresql://build:build@localhost:5432/build
+      DEPLOY_DIR: /opt/syukan-counter-todo
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,30 +82,22 @@ jobs:
             ${{ env.SHA_IMAGE }}
             ${{ env.LATEST_IMAGE }}
 
-      - name: SSH 接続情報を準備
-        env:
-          OCI_SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
-          OCI_SSH_KNOWN_HOSTS: ${{ secrets.OCI_SSH_KNOWN_HOSTS }}
+      - name: production設定を配置
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$OCI_SSH_PRIVATE_KEY" > ~/.ssh/oci_deploy
-          chmod 600 ~/.ssh/oci_deploy
-          printf '%s\n' "$OCI_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          install -d -m 700 "$DEPLOY_DIR/deploy" "$DEPLOY_DIR/scripts"
+          install -m 600 compose.production.yaml "$DEPLOY_DIR/compose.production.yaml"
+          install -m 600 deploy/Caddyfile "$DEPLOY_DIR/deploy/Caddyfile"
+          install -m 700 scripts/validate-production-config.sh "$DEPLOY_DIR/validate-production-config.sh"
+          install -m 700 scripts/backup-production-db.sh "$DEPLOY_DIR/scripts/backup-production-db.sh"
+          install -m 700 scripts/restore-production-db.sh "$DEPLOY_DIR/scripts/restore-production-db.sh"
+
+      - name: production設定を検査
+        run: |
+          cd "$DEPLOY_DIR"
+          ./validate-production-config.sh
 
       - name: OCI Compute へデプロイ
-        env:
-          OCI_HOST: ${{ secrets.OCI_HOST }}
-          OCI_USER: ${{ secrets.OCI_USER }}
         run: |
-          ssh -i ~/.ssh/oci_deploy "$OCI_USER@$OCI_HOST" \
-            "install -d -m 700 /opt/syukan-counter-todo/deploy /opt/syukan-counter-todo/scripts"
-          scp -i ~/.ssh/oci_deploy compose.production.yaml \
-            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/compose.production.yaml"
-          scp -i ~/.ssh/oci_deploy deploy/Caddyfile \
-            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/deploy/Caddyfile"
-          scp -i ~/.ssh/oci_deploy scripts/validate-production-config.sh \
-            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/validate-production-config.sh"
-          scp -i ~/.ssh/oci_deploy scripts/backup-production-db.sh scripts/restore-production-db.sh \
-            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/scripts/"
-          ssh -i ~/.ssh/oci_deploy "$OCI_USER@$OCI_HOST" \
-            "cd /opt/syukan-counter-todo && chmod 700 validate-production-config.sh scripts/*.sh && ./validate-production-config.sh && APP_IMAGE='$IMAGE' docker compose --env-file .env.production -f compose.production.yaml up -d --pull always --remove-orphans --wait --wait-timeout 180"
+          cd "$DEPLOY_DIR"
+          APP_IMAGE="$IMAGE" docker compose --env-file .env.production -f compose.production.yaml \
+            up -d --pull always --remove-orphans --wait --wait-timeout 180
