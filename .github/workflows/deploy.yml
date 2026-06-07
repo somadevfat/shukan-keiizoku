@@ -1,0 +1,77 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: コンテナイメージ名を設定
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_ENV"
+          echo "LATEST_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest" >> "$GITHUB_ENV"
+
+      - name: GitHub Container Registry にログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: コンテナイメージを build / push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}
+            ${{ env.LATEST_IMAGE }}
+
+      - name: SSH 接続情報を準備
+        env:
+          OCI_SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          OCI_SSH_KNOWN_HOSTS: ${{ secrets.OCI_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$OCI_SSH_PRIVATE_KEY" > ~/.ssh/oci_deploy
+          chmod 600 ~/.ssh/oci_deploy
+          printf '%s\n' "$OCI_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: OCI Compute へデプロイ
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        run: |
+          ssh -i ~/.ssh/oci_deploy "$OCI_USER@$OCI_HOST" \
+            "install -d -m 700 /opt/syukan-counter-todo/deploy /opt/syukan-counter-todo/scripts"
+          scp -i ~/.ssh/oci_deploy compose.production.yaml \
+            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/compose.production.yaml"
+          scp -i ~/.ssh/oci_deploy deploy/Caddyfile \
+            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/deploy/Caddyfile"
+          scp -i ~/.ssh/oci_deploy scripts/validate-production-config.sh \
+            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/validate-production-config.sh"
+          scp -i ~/.ssh/oci_deploy scripts/backup-production-db.sh scripts/restore-production-db.sh \
+            "$OCI_USER@$OCI_HOST:/opt/syukan-counter-todo/scripts/"
+          ssh -i ~/.ssh/oci_deploy "$OCI_USER@$OCI_HOST" \
+            "cd /opt/syukan-counter-todo && chmod 700 validate-production-config.sh scripts/*.sh && ./validate-production-config.sh && APP_IMAGE='$IMAGE' docker compose --env-file .env.production -f compose.production.yaml up -d --pull always --remove-orphans --wait --wait-timeout 180"

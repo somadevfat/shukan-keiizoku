@@ -34,7 +34,7 @@
 - [完了] 開発基盤の全品質チェックを完了する
   - format、lint、typecheck、UT、coverage、E2E、build、Docker smoke test を通す。
 - [保留] 最新実装で Docker image build を再検証する
-  - npm registry への接続 timeout が繰り返し発生したため、ネットワーク回復後に再実行する。
+  - 2026-06-07 に再実行したが、Docker 内部から npm registry への接続が `ENETUNREACH` になったため、ネットワーク回復後に再実行する。
 
 ## マイルストーン 2: 認証とユーザー
 
@@ -107,8 +107,15 @@
 ## マイルストーン 6: リリース準備
 
 - [未着手] 主要ユーザーフローの Playwright E2E を完成させる
-- [未着手] Oracle Cloud Infrastructure 向け運用手順を作成する
-- [未着手] backup / restore 手順を作成・検証する
+- [完了] リリース前セキュリティ監査を実施する
+  - Git 追跡物、秘密情報、依存関係、認証・認可、データ管理、Docker、CI/CD を確認する。
+  - 重大な問題を修正し、残存リスクを運用手順へ記録する。
+- [完了] Oracle Cloud Infrastructure 向け運用手順を作成する
+  - 初回デプロイと GitHub Actions による CD の手順を文書化する。
+- [完了] production 設定の事前検査を自動化する
+  - production Compose と環境変数の不足・危険な設定をデプロイ前に検出する。
+- [完了] backup / restore 手順を作成・検証する
+  - backup / restore スクリプトを作成し、専用 PostgreSQL で復元を検証する。
 - [未着手] production smoke test を作成する
 - [未着手] npm audit の脆弱性を継続監視する
   - 現在は依存パッケージに low 2件、moderate 7件がある。

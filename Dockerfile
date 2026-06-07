@@ -18,10 +18,9 @@ RUN npm prune --omit=dev --ignore-scripts
 
 FROM base AS builder
 WORKDIR /app
-ENV DATABASE_URL=postgresql://app:app@db:5432/syukan_counter?schema=public
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run db:generate
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run db:generate
 RUN npm run build
 
 FROM base AS runner
