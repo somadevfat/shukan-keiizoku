@@ -17,6 +17,7 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.6.2
       - run: npm ci
+      - run: npm run db:generate
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
@@ -79,6 +80,7 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.6.2
       - run: npm ci
+      - run: npm run db:generate
       - run: npm run db:migrate:deploy
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

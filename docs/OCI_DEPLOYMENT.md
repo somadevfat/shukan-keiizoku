@@ -98,17 +98,17 @@ GitHub Actions の workflow permission で packages への write を許可する
 | 後方互換性のある機能追加         | `v1.2.3` → `v1.3.0` |
 | 互換性を壊す変更・大きな仕様変更 | `v1.2.3` → `v2.0.0` |
 
-通常の開発では `main` へ merge し、CI 成功と動作確認後にリリースする。タグは履歴を明確にするため注釈付きタグを使用し、一度 push したリリースタグを移動・再利用しない。
+通常の開発では `main` へ merge し、CI 成功と動作確認後にGitHub WebからReleaseを公開する。一度公開したリリースタグを移動・再利用しない。
 
-```bash
-git switch main
-git pull --ff-only origin main
-git status --short
-git tag -a v1.0.0 -m "release: v1.0.0"
-git push origin v1.0.0
-```
+1. GitHub repository の `Releases` を開く。
+2. `Draft a new release` を選ぶ。
+3. `Choose a tag` で `v1.0.0` のような新しいSemVerタグを入力し、`Create new tag on publish` を選ぶ。
+4. Target が `main` であることを確認する。
+5. タイトルとリリースノートを入力する。
+6. `Set as a pre-release` を無効にする。
+7. `Publish release` を実行する。
 
-`.github/workflows/deploy.yml` はタグpush後に次を実行する。
+`.github/workflows/deploy.yml` はGitHub WebでReleaseが公開された後に次を実行する。タグをCLIからpushしただけではデプロイしない。Draft ReleaseとPre-releaseもデプロイしない。
 
 1. タグが正しいSemVer形式であり、対象commitが`main`に含まれることを検証する。
 2. format、lint、typecheck、unit test、coverage、audit、production buildを再検査する。
@@ -116,9 +116,7 @@ git push origin v1.0.0
 4. OCI Computeへproduction Compose、Caddy、運用スクリプトを転送する。
 5. version固定imageをpullし、migrationを適用して起動する。
 6. DB接続を含む`/api/health`が成功するまで待つ。
-7. デプロイ成功後にGitHub Releaseと自動生成リリースノートを作成する。
-
-タグ作成後にworkflowが失敗した場合、そのタグは修正せず、原因を修正して次のPATCH versionを発行する。
+   Release公開後にworkflowが失敗した場合、そのタグは修正せず、原因を修正して次のPATCH versionを公開する。
 
 起動後に確認する。
 
@@ -149,13 +147,7 @@ git tag --list 'v*' --sort=-version:refname
 gh release list
 ```
 
-誤って作成したが、まだpushしていないタグだけは削除して作り直せる。
-
-```bash
-git tag -d v1.2.3
-```
-
-push済みタグの削除・移動は、リリース、Docker image、稼働versionの対応関係を壊すため原則禁止する。
+公開済みReleaseとタグの削除・移動は、Release、Docker image、稼働versionの対応関係を壊すため原則禁止する。
 
 ## 8. バックアップ
 
