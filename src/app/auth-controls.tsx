@@ -14,7 +14,7 @@ export function AuthControls({ isGuest, userName }: AuthControlsProps) {
   if (isGuest) {
     return (
       <Link href="/signin" className={styles.protectDataLink}>
-        データを保護する
+        ログイン
       </Link>
     );
   }
@@ -27,7 +27,7 @@ export function AuthControls({ isGuest, userName }: AuthControlsProps) {
       >
         {userName.slice(0, 1).toUpperCase()}
       </span>
-      <button type="button" onClick={() => signOut({ callbackUrl: "/signin" })}>
+      <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>
         ログアウト
       </button>
     </div>
